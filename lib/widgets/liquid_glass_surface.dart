@@ -106,6 +106,7 @@ class LiquidGlassCard extends StatelessWidget {
   final Clip clipBehavior;
   final double blurSigma;
   final EdgeInsetsGeometry? padding;
+  final bool opaque;
 
   const LiquidGlassCard({
     super.key,
@@ -115,7 +116,80 @@ class LiquidGlassCard extends StatelessWidget {
     this.clipBehavior = Clip.antiAlias,
     this.blurSigma = 22,
     this.padding,
+    this.opaque = false,
   });
+
+  List<Color> get _gradientColors => opaque
+      ? const [AppleColors.card, Color(0xFFF8F8FA)]
+      : [
+          AppleColors.card.withValues(alpha: 0.94),
+          AppleColors.card.withValues(alpha: 0.66),
+        ];
+
+  Widget _buildSurface(Widget content) {
+    final layers = Stack(
+      fit: StackFit.passthrough,
+      children: [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: borderRadius,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _gradientColors,
+              ),
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: opaque ? 0.9 : 0.74),
+                  width: 1,
+                ),
+                left: BorderSide(
+                  color: Colors.white.withValues(alpha: opaque ? 0.65 : 0.52),
+                  width: 0.8,
+                ),
+                right: BorderSide(
+                  color: Colors.white.withValues(alpha: opaque ? 0.35 : 0.2),
+                  width: 0.6,
+                ),
+                bottom: BorderSide(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  width: 0.6,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: borderRadius,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: const Alignment(0.65, 0.85),
+                  colors: [
+                    Colors.white.withValues(alpha: opaque ? 0.22 : 0.32),
+                    Colors.white.withValues(alpha: 0.06),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.24, 0.58],
+                ),
+              ),
+            ),
+          ),
+        ),
+        content,
+      ],
+    );
+
+    if (opaque) return layers;
+
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+      child: layers,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,69 +213,8 @@ class LiquidGlassCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: borderRadius,
         clipBehavior: clipBehavior,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-          child: Stack(
-            fit: StackFit.passthrough,
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: borderRadius,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppleColors.card.withValues(alpha: 0.94),
-                        AppleColors.card.withValues(alpha: 0.66),
-                      ],
-                    ),
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.74),
-                        width: 1,
-                      ),
-                      left: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.52),
-                        width: 0.8,
-                      ),
-                      right: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 0.6,
-                      ),
-                      bottom: BorderSide(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        width: 0.6,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: borderRadius,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: const Alignment(0.65, 0.85),
-                        colors: [
-                          Colors.white.withValues(alpha: 0.32),
-                          Colors.white.withValues(alpha: 0.06),
-                          Colors.transparent,
-                        ],
-                        stops: const [0.0, 0.24, 0.58],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              if (padding != null)
-                Padding(padding: padding!, child: child)
-              else
-                child,
-            ],
-          ),
+        child: _buildSurface(
+          padding != null ? Padding(padding: padding!, child: child) : child,
         ),
       ),
     );

@@ -37,6 +37,7 @@ class CartItemTile extends StatelessWidget {
 
     return LiquidGlassCard(
       borderRadius: borderRadius,
+      opaque: flatTrailingEdge,
       child: Stack(
         clipBehavior: Clip.none,
         children: [

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
@@ -47,22 +49,26 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
   }
 
   void close() {
-    _animateTo(0, opening: false);
+    _animateTo(0);
   }
 
-  Future<void> _animateTo(double target, {required bool opening}) async {
+  Future<void> _animateTo(double target) async {
     _snapController.stop();
     final simulation = SpringSimulation(
-      const SpringDescription(
-        mass: 0.6,
-        stiffness: 520,
-        damping: 34,
+      SpringDescription(
+        mass: 0.85,
+        stiffness: target > _dragOffset ? 280 : 320,
+        damping: target > _dragOffset ? 22 : 26,
       ),
       _dragOffset,
       target,
-      0,
+      _snapController.velocity,
     );
     await _snapController.animateWith(simulation);
+    if (mounted && target == 0 && _dragOffset < 0.5) {
+      _snapController.value = 0;
+      setState(() => _dragOffset = 0);
+    }
   }
 
   void _onDragStart(DragStartDetails details) {
@@ -80,18 +86,23 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
   void _onDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
     if (velocity < -500) {
-      _animateTo(_totalActionsWidth, opening: true);
+      _animateTo(_totalActionsWidth);
       return;
     }
     if (velocity > 500) {
-      _animateTo(0, opening: false);
+      _animateTo(0);
       return;
     }
     if (_dragOffset > _totalActionsWidth * 0.38) {
-      _animateTo(_totalActionsWidth, opening: true);
+      _animateTo(_totalActionsWidth);
     } else {
-      _animateTo(0, opening: false);
+      _animateTo(0);
     }
+  }
+
+  double _staggeredReveal(double offsetStart) {
+    return Curves.easeOutCubic
+        .transform(((_dragOffset - offsetStart) / _actionWidth).clamp(0.0, 1.0));
   }
 
   BorderRadius get _foregroundRadius {
@@ -106,44 +117,51 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
 
   @override
   Widget build(BuildContext context) {
-    final revealProgress = (_dragOffset / _totalActionsWidth).clamp(0.0, 1.0);
+    final detailReveal = _staggeredReveal(0);
+    final deleteReveal = _staggeredReveal(_actionWidth);
+    final showActions = _dragOffset > 0.5;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppleRadius.card),
       child: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
-          Positioned.fill(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _SwipeActionButton(
-                  label: 'Detail',
-                  icon: Icons.info_outline_rounded,
-                  color: AppleColors.blue,
-                  width: _actionWidth,
-                  progress: revealProgress,
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    _animateTo(0, opening: false);
-                    widget.onDetail();
-                  },
-                ),
-                _SwipeActionButton(
-                  label: 'Delete',
-                  icon: Icons.delete_outline_rounded,
-                  color: const Color(0xFFFF3B30),
-                  width: _actionWidth,
-                  progress: revealProgress,
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    _animateTo(0, opening: false);
-                    widget.onDelete();
-                  },
-                ),
-              ],
+          if (showActions)
+            Positioned.fill(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _SwipeActionButton(
+                    label: 'Detail',
+                    icon: Icons.info_outline_rounded,
+                    color: AppleColors.blue,
+                    width: _actionWidth,
+                    reveal: detailReveal,
+                    onTap: detailReveal > 0.85
+                        ? () {
+                            HapticFeedback.selectionClick();
+                            _animateTo(0);
+                            widget.onDetail();
+                          }
+                        : null,
+                  ),
+                  _SwipeActionButton(
+                    label: 'Delete',
+                    icon: Icons.delete_outline_rounded,
+                    color: const Color(0xFFFF3B30),
+                    width: _actionWidth,
+                    reveal: deleteReveal,
+                    onTap: deleteReveal > 0.85
+                        ? () {
+                            HapticFeedback.mediumImpact();
+                            _animateTo(0);
+                            widget.onDelete();
+                          }
+                        : null,
+                  ),
+                ],
+              ),
             ),
-          ),
           GestureDetector(
             onHorizontalDragStart: _onDragStart,
             onHorizontalDragUpdate: _onDragUpdate,
@@ -167,42 +185,64 @@ class _SwipeActionButton extends StatelessWidget {
   final IconData icon;
   final Color color;
   final double width;
-  final double progress;
-  final VoidCallback onTap;
+  final double reveal;
+  final VoidCallback? onTap;
 
   const _SwipeActionButton({
     required this.label,
     required this.icon,
     required this.color,
     required this.width,
-    required this.progress,
+    required this.reveal,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (reveal <= 0.001) {
+      return SizedBox(width: width);
+    }
+
+    final bounce = Curves.easeOutBack.transform(reveal);
+    final slideX = lerpDouble(18, 0, bounce)!;
+
     return SizedBox(
       width: width,
-      child: Material(
-        color: color,
-        child: InkWell(
-          onTap: onTap,
-          child: Opacity(
-            opacity: 0.4 + (progress * 0.6),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 21),
-                const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment.centerRight,
+          widthFactor: bounce.clamp(0.001, 1.0),
+          child: Transform.translate(
+            offset: Offset(slideX, 0),
+            child: Opacity(
+              opacity: reveal.clamp(0.0, 1.0),
+              child: Material(
+                color: color,
+                child: InkWell(
+                  onTap: onTap,
+                  child: SizedBox(
+                    width: width,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Transform.scale(
+                          scale: 0.82 + (bounce * 0.18),
+                          child: Icon(icon, color: Colors.white, size: 21),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
