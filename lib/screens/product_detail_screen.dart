@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../data/product.dart';
+import '../theme/apple_theme.dart';
+import '../widgets/apple_back_button.dart';
+import '../widgets/apple_primary_button.dart';
 import '../widgets/product_image.dart';
 import '../widgets/spec_card.dart';
 
@@ -19,135 +22,108 @@ class ProductDetailScreen extends StatelessWidget {
     final specs = product.specEntries.take(3).toList();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppleColors.canvas,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.chevron_left, size: 28),
-                    label: const Text(
-                      'Back',
-                      style: TextStyle(fontSize: 17),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
+            const Padding(
+              padding: EdgeInsets.only(left: 4, top: 4),
+              child: AppleBackButton(),
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 220,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F7),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: ProductImage(imageUrl: product.image),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      product.name,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      product.tagline,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF8E8E93),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
+                      child: Hero(
+                        tag: 'product-${product.id}',
+                        child: ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(AppleRadius.card),
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: DecoratedBox(
+                              decoration: AppleDecorations.card,
+                              child: ProductImage(
+                                imageUrl: product.image,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Description',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppleSpacing.screen,
+                        AppleSpacing.section,
+                        AppleSpacing.screen,
+                        24,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      product.description,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.5,
-                        color: Color(0xFF3C3C43),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Specifications',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        for (var i = 0; i < specs.length; i++) ...[
-                          if (i > 0) const SizedBox(width: 10),
-                          SpecCard(
-                            label: specs[i].key,
-                            value: specs[i].value,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.categoryLabel.toUpperCase(),
+                            style: AppleTextStyles.cardCategory,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(product.name, style: AppleTextStyles.largeTitle),
+                          const SizedBox(height: 10),
+                          Text(product.tagline, style: AppleTextStyles.callout),
+                          const SizedBox(height: 12),
+                          Text(product.price, style: AppleTextStyles.title3),
+                          const SizedBox(height: AppleSpacing.section),
+                          Text('Overview', style: AppleTextStyles.title3),
+                          const SizedBox(height: 12),
+                          Text(
+                            product.description,
+                            style: AppleTextStyles.body,
+                          ),
+                          const SizedBox(height: AppleSpacing.section),
+                          Text('Specifications', style: AppleTextStyles.title3),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              for (var i = 0; i < specs.length; i++) ...[
+                                if (i > 0) const SizedBox(width: 10),
+                                SpecCard(
+                                  label: specs[i].key,
+                                  value: specs[i].value,
+                                ),
+                              ],
+                            ],
                           ),
                         ],
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
+            DecoratedBox(
+              decoration: const BoxDecoration(
+                color: AppleColors.card,
+                border: Border(
+                  top: BorderSide(color: Color(0x33D2D2D7)),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 14, 22, 22),
+                child: ApplePrimaryButton(
+                  label: 'Add to Cart — ${product.price}',
                   onPressed: () {
                     onAddToCart(product);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${product.name} added to cart'),
-                        duration: const Duration(seconds: 2),
-                        behavior: SnackBarBehavior.floating,
+                        content: Text('${product.name} added to your bag'),
                       ),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Add to Cart — ${product.price}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
               ),
             ),

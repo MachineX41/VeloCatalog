@@ -17,19 +17,23 @@ class ProductImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      _assetPath,
-      fit: fit,
-      errorBuilder: (context, error, stackTrace) {
-        return Image.network(
-          imageUrl,
-          fit: fit,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.image_not_supported_outlined,
-            color: Colors.grey,
-          ),
-        );
-      },
+    return SizedBox.expand(
+      child: Image.asset(
+        _assetPath,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.network(
+            imageUrl,
+            fit: fit,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.image_not_supported_outlined,
+              color: Colors.grey,
+            ),
+          );
+        },
+      ),
     );
   }
 }

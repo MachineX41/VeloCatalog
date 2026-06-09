@@ -47,4 +47,20 @@ class Product {
   }
 
   List<MapEntry<String, String>> get specEntries => specs.entries.toList();
+
+  String get categoryLabel {
+    if (name.startsWith('iPhone')) return 'iPhone';
+    if (name.startsWith('MacBook')) return 'MacBook';
+    if (name.startsWith('iPad')) return 'iPad';
+    if (name.startsWith('AirPods')) return 'AirPods';
+    if (name.startsWith('HomePod')) return 'HomePod';
+    if (name.startsWith('Apple Watch')) return 'Apple Watch';
+    if (name.startsWith('Apple Vision')) return 'Apple Vision';
+    if (name.startsWith('iMac')) return 'iMac';
+    return 'Apple';
+  }
+
+  double get priceValue {
+    return double.tryParse(price.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0;
+  }
 }

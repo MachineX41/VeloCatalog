@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../data/cart_entry.dart';
 import '../data/product.dart';
+import '../theme/apple_theme.dart';
+import '../widgets/apple_back_button.dart';
+import '../widgets/apple_primary_button.dart';
 import '../widgets/cart_item_tile.dart';
+import '../widgets/glass_bar.dart';
 
 class CartScreen extends StatefulWidget {
-  final List<Product> cartItems;
+  final List<CartEntry> cartEntries;
+  final void Function(Product product) onIncrement;
+  final void Function(Product product) onDecrement;
   final void Function(Product product) onRemove;
 
   const CartScreen({
     super.key,
-    required this.cartItems,
+    required this.cartEntries,
+    required this.onIncrement,
+    required this.onDecrement,
     required this.onRemove,
   });
 
@@ -18,140 +27,118 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  void _handleRemove(Product product) {
-    widget.onRemove(product);
-    setState(() {});
-  }
+  void _refresh() => setState(() {});
+
+  double get _total =>
+      widget.cartEntries.fold(0, (sum, entry) => sum + entry.lineTotal);
+
+  int get _itemCount =>
+      widget.cartEntries.fold(0, (sum, entry) => sum + entry.quantity);
 
   @override
   Widget build(BuildContext context) {
-    final isEmpty = widget.cartItems.isEmpty;
+    final isEmpty = widget.cartEntries.isEmpty;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppleColors.canvas,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.chevron_left, size: 28),
-                    label: const Text(
-                      'Cart',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
+            const Padding(
+              padding: EdgeInsets.only(left: 4, top: 4),
+              child: AppleBackButton(label: 'Bag'),
             ),
             Expanded(
               child: isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.remove_shopping_cart_outlined,
-                            size: 72,
-                            color: Color(0xFFD1D1D6),
+                            Icons.shopping_bag_outlined,
+                            size: 56,
+                            color: AppleColors.fill,
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 22),
                           Text(
-                            'Your cart is empty',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            'Your bag is empty',
+                            style: AppleTextStyles.title2,
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           Text(
                             'Add items to start shopping.',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Color(0xFF8E8E93),
-                            ),
+                            style: AppleTextStyles.subheadline,
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: widget.cartItems.length,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppleSpacing.screen,
+                        8,
+                        AppleSpacing.screen,
+                        120,
+                      ),
+                      itemCount: widget.cartEntries.length,
                       itemBuilder: (context, index) {
-                        final product = widget.cartItems[index];
-                        return CartItemTile(
-                          product: product,
-                          onRemove: () => _handleRemove(product),
+                        final entry = widget.cartEntries[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: CartItemTile(
+                            entry: entry,
+                            onIncrement: () {
+                              widget.onIncrement(entry.product);
+                              _refresh();
+                            },
+                            onDecrement: () {
+                              widget.onDecrement(entry.product);
+                              _refresh();
+                            },
+                            onRemove: () {
+                              widget.onRemove(entry.product);
+                              _refresh();
+                            },
+                          ),
                         );
                       },
                     ),
             ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F7),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
+            GlassBar(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: Color(0xFF8E8E93)),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF8E8E93),
-                      ),
+                  if (!isEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Subtotal · $_itemCount items',
+                          style: AppleTextStyles.subheadline,
+                        ),
+                        Text(
+                          formatPrice(_total),
+                          style: AppleTextStyles.title3,
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 14),
+                  ],
+                  ApplePrimaryButton(
+                    label: isEmpty ? 'Check Out' : 'Check Out — ${formatPrice(_total)}',
+                    accent: false,
+                    onPressed: isEmpty
+                        ? null
+                        : () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Checkout simulation complete!'),
+                              ),
+                            );
+                          },
                   ),
                 ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: isEmpty
-                      ? null
-                      : () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Checkout simulation complete!'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFE5E5EA),
-                    disabledForegroundColor: const Color(0xFF8E8E93),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Checkout',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
               ),
             ),
           ],
