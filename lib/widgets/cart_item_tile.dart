@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../data/cart_entry.dart';
 import '../theme/apple_theme.dart';
+import 'liquid_glass_surface.dart';
 import 'product_image.dart';
 
 class CartItemTile extends StatelessWidget {
@@ -128,14 +129,9 @@ class _QuantityStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppleColors.canvas,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppleColors.separator.withValues(alpha: 0.45),
-        ),
-      ),
+    return LiquidGlassSurface(
+      borderRadius: BorderRadius.circular(18),
+      blurSigma: 16,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
