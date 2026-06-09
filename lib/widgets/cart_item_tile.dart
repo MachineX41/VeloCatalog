@@ -10,6 +10,7 @@ class CartItemTile extends StatelessWidget {
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
   final VoidCallback onRemove;
+  final bool showCloseButton;
 
   const CartItemTile({
     super.key,
@@ -17,6 +18,7 @@ class CartItemTile extends StatelessWidget {
     required this.onIncrement,
     required this.onDecrement,
     required this.onRemove,
+    this.showCloseButton = true,
   });
 
   @override
@@ -26,60 +28,75 @@ class CartItemTile extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.all(14),
       decoration: AppleDecorations.card,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: SizedBox(
-              width: 68,
-              height: 68,
-              child: ProductImage(
-                imageUrl: product.image,
-                fit: BoxFit.cover,
-              ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              14,
+              14,
+              showCloseButton ? 44 : 14,
+              52,
             ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  product.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppleTextStyles.headline.copyWith(fontSize: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: ProductImage(
+                      imageUrl: product.image,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  product.tagline,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppleTextStyles.footnote,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppleTextStyles.headline.copyWith(fontSize: 16),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        product.tagline,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppleTextStyles.footnote,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(product.price, style: AppleTextStyles.price),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(product.price, style: AppleTextStyles.price),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          Column(
-            children: [
-              _IconAction(
+          if (showCloseButton)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: _IconAction(
                 icon: Icons.close_rounded,
                 onTap: onRemove,
                 size: 15,
               ),
-              const SizedBox(height: 12),
-              _QuantityStepper(
-                quantity: entry.quantity,
-                onIncrement: onIncrement,
-                onDecrement: onDecrement,
-              ),
-            ],
+            ),
+          Positioned(
+            bottom: 12,
+            right: 12,
+            child: _QuantityStepper(
+              quantity: entry.quantity,
+              onIncrement: onIncrement,
+              onDecrement: onDecrement,
+            ),
           ),
         ],
       ),

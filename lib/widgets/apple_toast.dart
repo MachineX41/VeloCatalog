@@ -6,6 +6,12 @@ import 'package:flutter/services.dart';
 import '../theme/apple_theme.dart';
 import 'product_image.dart';
 
+enum AppleToastKind {
+  bag,
+  success,
+  removed,
+}
+
 class AppleToast {
   static OverlayEntry? _entry;
 
@@ -14,6 +20,7 @@ class AppleToast {
     required String title,
     required String subtitle,
     String? imageUrl,
+    AppleToastKind kind = AppleToastKind.bag,
   }) {
     _entry?.remove();
     _entry = null;
@@ -27,6 +34,7 @@ class AppleToast {
         title: title,
         subtitle: subtitle,
         imageUrl: imageUrl,
+        kind: kind,
         onDismissed: () {
           if (_entry == entry) {
             entry.remove();
@@ -45,12 +53,14 @@ class _AppleToastOverlay extends StatefulWidget {
   final String title;
   final String subtitle;
   final String? imageUrl;
+  final AppleToastKind kind;
   final VoidCallback onDismissed;
 
   const _AppleToastOverlay({
     required this.title,
     required this.subtitle,
     this.imageUrl,
+    required this.kind,
     required this.onDismissed,
   });
 
@@ -116,6 +126,71 @@ class _AppleToastOverlayState extends State<_AppleToastOverlay>
     super.dispose();
   }
 
+  Widget _buildLeading() {
+    if (widget.imageUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: ProductImage(
+            imageUrl: widget.imageUrl!,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: _accentColor.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        _leadingFallbackIcon,
+        color: _accentColor,
+        size: 24,
+      ),
+    );
+  }
+
+  Color get _accentColor {
+    switch (widget.kind) {
+      case AppleToastKind.success:
+        return const Color(0xFF34C759);
+      case AppleToastKind.removed:
+        return const Color(0xFFFF3B30);
+      case AppleToastKind.bag:
+        return AppleColors.blue;
+    }
+  }
+
+  IconData get _leadingFallbackIcon {
+    switch (widget.kind) {
+      case AppleToastKind.success:
+        return Icons.check_rounded;
+      case AppleToastKind.removed:
+        return Icons.delete_outline_rounded;
+      case AppleToastKind.bag:
+        return Icons.shopping_bag_outlined;
+    }
+  }
+
+  IconData get _trailingIcon {
+    switch (widget.kind) {
+      case AppleToastKind.success:
+        return Icons.verified_rounded;
+      case AppleToastKind.removed:
+        return Icons.close_rounded;
+      case AppleToastKind.bag:
+        return Icons.shopping_bag_outlined;
+    }
+  }
+
+  Color get _trailingColor => _accentColor;
+
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top + 12;
@@ -171,32 +246,7 @@ class _AppleToastOverlayState extends State<_AppleToastOverlay>
                       ),
                       child: Row(
                         children: [
-                          if (widget.imageUrl != null)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: SizedBox(
-                                width: 44,
-                                height: 44,
-                                child: ProductImage(
-                                  imageUrl: widget.imageUrl!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            )
-                          else
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: AppleColors.blue.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.check_rounded,
-                                color: AppleColors.blue,
-                                size: 24,
-                              ),
-                            ),
+                          _buildLeading(),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -222,10 +272,10 @@ class _AppleToastOverlayState extends State<_AppleToastOverlay>
                               ],
                             ),
                           ),
-                          const Icon(
-                            Icons.shopping_bag_outlined,
+                          Icon(
+                            _trailingIcon,
                             size: 18,
-                            color: AppleColors.blue,
+                            color: _trailingColor,
                           ),
                         ],
                       ),

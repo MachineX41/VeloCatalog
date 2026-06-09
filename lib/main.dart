@@ -82,6 +82,7 @@ class _VeloCatalogAppState extends State<VeloCatalogApp> {
       routes: {
         '/cart': (context) => CartScreen(
               cartEntries: _cartEntries,
+              onAddToCart: _addToCart,
               onIncrement: _incrementQuantity,
               onDecrement: _decrementQuantity,
               onRemove: _removeFromCart,

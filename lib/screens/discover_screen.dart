@@ -200,6 +200,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       createAppleRoute(
         CartScreen(
           cartEntries: widget.cartEntries,
+          onAddToCart: widget.onAddToCart,
           onIncrement: widget.onIncrement,
           onDecrement: widget.onDecrement,
           onRemove: widget.onRemoveFromCart,
