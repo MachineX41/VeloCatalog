@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/cart_entry.dart';
 import '../data/product.dart';
 import '../data/product_repository.dart';
 import '../theme/apple_theme.dart';
+import '../widgets/animated_product_grid_item.dart';
 import '../widgets/category_filter_bar.dart';
 import '../widgets/product_card.dart';
 import 'cart_screen.dart';
@@ -37,6 +40,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   bool _isLoading = true;
   String _selectedCategory = 'All';
   String _sortOption = 'featured';
+  int _animationTick = 0;
+  Timer? _searchDebounce;
   final TextEditingController _searchController = TextEditingController();
 
   static const _horizontalPadding = 16.0;
@@ -53,13 +58,18 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   void initState() {
     super.initState();
     _loadProducts();
-    _searchController.addListener(_applyFilters);
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _scheduleFilter() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 220), _applyFilters);
   }
 
   Future<void> _loadProducts() async {
@@ -95,10 +105,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       results.sort((a, b) => a.id.compareTo(b.id));
     }
 
-    setState(() => _filteredProducts = results);
+    setState(() {
+      _filteredProducts = results;
+      _animationTick++;
+    });
   }
 
   void _selectCategory(String category) {
+    if (_selectedCategory == category) return;
     setState(() => _selectedCategory = category);
     _applyFilters();
   }
@@ -306,6 +320,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                 ? IconButton(
                                     onPressed: () {
                                       _searchController.clear();
+                                      setState(() {});
                                       _applyFilters();
                                     },
                                     icon: const Icon(
@@ -321,7 +336,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                               horizontal: 4,
                             ),
                           ),
-                          onChanged: (_) => setState(() {}),
+                          onChanged: (_) {
+                            setState(() {});
+                            _scheduleFilter();
+                          },
                         ),
                       ),
                     ),
@@ -376,11 +394,29 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              _resultsLabel,
-                              style: AppleTextStyles.subheadline.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppleColors.label,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 260),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, 0.15),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                _resultsLabel,
+                                key: ValueKey<String>(_resultsLabel),
+                                style: AppleTextStyles.subheadline.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppleColors.label,
+                                ),
                               ),
                             ),
                           ),
@@ -406,31 +442,38 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     ),
                     sliver: _filteredProducts.isEmpty
                         ? SliverToBoxAdapter(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 48),
-                              decoration: AppleDecorations.card,
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.search_off_rounded,
-                                    size: 44,
-                                    color: AppleColors.fill,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No products found',
-                                    style: AppleTextStyles.title3,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Try a different search or category.',
-                                    style: AppleTextStyles.subheadline,
-                                  ),
-                                ],
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 320),
+                              switchInCurve: Curves.easeOutCubic,
+                              child: Container(
+                                key: const ValueKey('empty-state'),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 48),
+                                decoration: AppleDecorations.card,
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.search_off_rounded,
+                                      size: 44,
+                                      color: AppleColors.fill,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No products found',
+                                      style: AppleTextStyles.title3,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Try a different search or category.',
+                                      style: AppleTextStyles.subheadline,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           )
                         : SliverGrid(
+                            key: ValueKey<int>(_animationTick),
                             gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
@@ -441,9 +484,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final product = _filteredProducts[index];
-                                return ProductCard(
-                                  product: product,
-                                  onTap: () => _openProductDetail(product),
+                                return AnimatedProductGridItem(
+                                  key: ValueKey<int>(product.id),
+                                  index: index,
+                                  animationTick: _animationTick,
+                                  child: ProductCard(
+                                    product: product,
+                                    onTap: () => _openProductDetail(product),
+                                  ),
                                 );
                               },
                               childCount: _filteredProducts.length,

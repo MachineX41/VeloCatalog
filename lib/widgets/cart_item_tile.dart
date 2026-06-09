@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../data/cart_entry.dart';
 import '../theme/apple_theme.dart';
@@ -23,18 +24,18 @@ class CartItemTile extends StatelessWidget {
     final product = entry.product;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: AppleDecorations.card,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(AppleRadius.tile),
+            borderRadius: BorderRadius.circular(14),
             child: SizedBox(
-              width: 72,
-              height: 72,
+              width: 68,
+              height: 68,
               child: ProductImage(
                 imageUrl: product.image,
                 fit: BoxFit.cover,
@@ -46,44 +47,39 @@ class CartItemTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.name, style: AppleTextStyles.headline),
-                const SizedBox(height: 4),
-                Text(product.tagline, style: AppleTextStyles.footnote),
-                const SizedBox(height: 10),
-                Text(product.price, style: AppleTextStyles.price),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _QuantityButton(
-                      icon: Icons.remove,
-                      onTap: onDecrement,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      child: Text(
-                        '${entry.quantity}',
-                        style: AppleTextStyles.headline,
-                      ),
-                    ),
-                    _QuantityButton(
-                      icon: Icons.add,
-                      onTap: onIncrement,
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: onRemove,
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppleColors.blue,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text('Remove'),
-                    ),
-                  ],
+                Text(
+                  product.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppleTextStyles.headline.copyWith(fontSize: 16),
                 ),
+                const SizedBox(height: 3),
+                Text(
+                  product.tagline,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppleTextStyles.footnote,
+                ),
+                const SizedBox(height: 8),
+                Text(product.price, style: AppleTextStyles.price),
               ],
             ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            children: [
+              _IconAction(
+                icon: Icons.close_rounded,
+                onTap: onRemove,
+                size: 15,
+              ),
+              const SizedBox(height: 12),
+              _QuantityStepper(
+                quantity: entry.quantity,
+                onIncrement: onIncrement,
+                onDecrement: onDecrement,
+              ),
+            ],
           ),
         ],
       ),
@@ -91,11 +87,70 @@ class CartItemTile extends StatelessWidget {
   }
 }
 
-class _QuantityButton extends StatelessWidget {
+class _QuantityStepper extends StatelessWidget {
+  final int quantity;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
+
+  const _QuantityStepper({
+    required this.quantity,
+    required this.onIncrement,
+    required this.onDecrement,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppleColors.canvas,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppleColors.separator.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StepperTap(
+            icon: Icons.remove_rounded,
+            onTap: onDecrement,
+          ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: animation, child: child),
+              );
+            },
+            child: SizedBox(
+              key: ValueKey<int>(quantity),
+              width: 28,
+              child: Text(
+                '$quantity',
+                textAlign: TextAlign.center,
+                style: AppleTextStyles.footnote.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppleColors.label,
+                ),
+              ),
+            ),
+          ),
+          _StepperTap(
+            icon: Icons.add_rounded,
+            onTap: onIncrement,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepperTap extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _QuantityButton({
+  const _StepperTap({
     required this.icon,
     required this.onTap,
   });
@@ -103,17 +158,49 @@ class _QuantityButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppleColors.canvas,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(18),
         child: SizedBox(
           width: 34,
           height: 34,
-          child: Icon(icon, size: 18, color: AppleColors.label),
+          child: Icon(icon, size: 16, color: AppleColors.label),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconAction extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final double size;
+
+  const _IconAction({
+    required this.icon,
+    required this.onTap,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppleColors.canvas,
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: Icon(icon, size: size, color: AppleColors.secondaryLabel),
         ),
       ),
     );

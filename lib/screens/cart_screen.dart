@@ -46,7 +46,7 @@ class _CartScreenState extends State<CartScreen> {
         child: Column(
           children: [
             const Padding(
-              padding: EdgeInsets.only(left: 4, top: 4),
+              padding: EdgeInsets.only(top: 8, bottom: 4),
               child: AppleBackButton(label: 'Bag'),
             ),
             Expanded(
