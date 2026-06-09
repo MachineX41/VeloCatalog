@@ -100,6 +100,114 @@ class LiquidGlassCircleButton extends StatelessWidget {
   }
 }
 
+class LiquidGlassCard extends StatelessWidget {
+  final Widget child;
+  final BorderRadius borderRadius;
+  final Clip clipBehavior;
+  final double blurSigma;
+  final EdgeInsetsGeometry? padding;
+
+  const LiquidGlassCard({
+    super.key,
+    required this.child,
+    this.borderRadius =
+        const BorderRadius.all(Radius.circular(AppleRadius.card)),
+    this.clipBehavior = Clip.antiAlias,
+    this.blurSigma = 22,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 34,
+            offset: const Offset(0, 16),
+            spreadRadius: -8,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: borderRadius,
+        clipBehavior: clipBehavior,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: Stack(
+            fit: StackFit.passthrough,
+            children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: borderRadius,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppleColors.card.withValues(alpha: 0.94),
+                        AppleColors.card.withValues(alpha: 0.66),
+                      ],
+                    ),
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.74),
+                        width: 1,
+                      ),
+                      left: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.52),
+                        width: 0.8,
+                      ),
+                      right: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 0.6,
+                      ),
+                      bottom: BorderSide(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        width: 0.6,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: borderRadius,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: const Alignment(0.65, 0.85),
+                        colors: [
+                          Colors.white.withValues(alpha: 0.32),
+                          Colors.white.withValues(alpha: 0.06),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.24, 0.58],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (padding != null)
+                Padding(padding: padding!, child: child)
+              else
+                child,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class LiquidGlassSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;

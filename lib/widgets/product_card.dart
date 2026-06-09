@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/product.dart';
 import '../theme/apple_theme.dart';
+import 'liquid_glass_surface.dart';
 import 'product_image.dart';
 
 class ProductCard extends StatefulWidget {
@@ -32,8 +33,7 @@ class _ProductCardState extends State<ProductCard> {
         scale: _pressed ? 0.98 : 1,
         duration: const Duration(milliseconds: 140),
         curve: Curves.easeOutCubic,
-        child: Container(
-          decoration: AppleDecorations.card,
+        child: LiquidGlassCard(
           clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -360,11 +360,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 320),
                               switchInCurve: Curves.easeOutCubic,
-                              child: Container(
+                              child: LiquidGlassCard(
                                 key: const ValueKey('empty-state'),
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 48),
-                                decoration: AppleDecorations.card,
                                 child: Column(
                                   children: [
                                     Icon(

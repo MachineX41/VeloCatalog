@@ -28,19 +28,15 @@ class CartItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final product = entry.product;
 
-    final decoration = flatTrailingEdge
-        ? AppleDecorations.card.copyWith(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(AppleRadius.card),
-              bottomLeft: Radius.circular(AppleRadius.card),
-            ),
+    final borderRadius = flatTrailingEdge
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(AppleRadius.card),
+            bottomLeft: Radius.circular(AppleRadius.card),
           )
-        : AppleDecorations.card;
+        : BorderRadius.circular(AppleRadius.card);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-      decoration: decoration,
+    return LiquidGlassCard(
+      borderRadius: borderRadius,
       child: Stack(
         clipBehavior: Clip.none,
         children: [

@@ -7,6 +7,7 @@ import '../widgets/apple_back_button.dart';
 import '../widgets/apple_primary_button.dart';
 import '../widgets/apple_toast.dart';
 import '../widgets/liquid_glass_bar.dart';
+import '../widgets/liquid_glass_surface.dart';
 import '../widgets/product_image.dart';
 import '../widgets/spec_card.dart';
 
@@ -71,17 +72,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
                       child: Hero(
                         tag: 'product-${widget.product.id}',
-                        child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppleRadius.card),
+                        child: LiquidGlassCard(
+                          clipBehavior: Clip.antiAlias,
                           child: AspectRatio(
                             aspectRatio: 1,
-                            child: DecoratedBox(
-                              decoration: AppleDecorations.card,
-                              child: ProductImage(
-                                imageUrl: widget.product.image,
-                                fit: BoxFit.cover,
-                              ),
+                            child: ProductImage(
+                              imageUrl: widget.product.image,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),

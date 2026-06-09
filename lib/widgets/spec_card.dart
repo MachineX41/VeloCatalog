@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/apple_theme.dart';
+import 'liquid_glass_surface.dart';
 
 class SpecCard extends StatelessWidget {
   final String label;
@@ -15,9 +16,10 @@ class SpecCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
+      child: LiquidGlassCard(
+        borderRadius: BorderRadius.circular(AppleRadius.tile),
+        blurSigma: 18,
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
-        decoration: AppleDecorations.softTile,
         child: Column(
           children: [
             Text(label.toUpperCase(), style: AppleTextStyles.cardCategory),
