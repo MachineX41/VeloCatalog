@@ -166,11 +166,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          'assets/images/banner.png',
-                          height: 120,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
+                        child: AspectRatio(
+                          aspectRatio: 2118 / 474,
+                          child: Image.asset(
+                            'assets/images/banner.png',
+                            width: double.infinity,
+                            fit: BoxFit.fill,
+                          ),
                         ),
                       ),
                     ),
