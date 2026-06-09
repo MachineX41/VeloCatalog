@@ -8,6 +8,7 @@ import '../data/product_repository.dart';
 import '../theme/apple_theme.dart';
 import '../widgets/animated_product_grid_item.dart';
 import '../widgets/category_filter_bar.dart';
+import '../widgets/liquid_glass_sort_menu.dart';
 import '../widgets/product_card.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
@@ -47,6 +48,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   static const _horizontalPadding = 16.0;
   static const _gridSpacing = 14.0;
   static const _cardHeight = 298.0;
+
+  static const _sortOptions = [
+    SortMenuOption(value: 'featured', label: 'Featured'),
+    SortMenuOption(value: 'price_low', label: 'Price: Low to High'),
+    SortMenuOption(value: 'price_high', label: 'Price: High to Low'),
+    SortMenuOption(value: 'name', label: 'Name: A to Z'),
+  ];
 
   List<String> get _categories {
     final labels = _products.map((product) => product.categoryLabel).toSet().toList()
@@ -115,71 +123,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     if (_selectedCategory == category) return;
     setState(() => _selectedCategory = category);
     _applyFilters();
-  }
-
-  Future<void> _showSortOptions() async {
-    final selected = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: AppleColors.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppleColors.separator,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text('Sort By', style: AppleTextStyles.title3),
-                const SizedBox(height: 12),
-                _SortTile(
-                  label: 'Featured',
-                  value: 'featured',
-                  groupValue: _sortOption,
-                  onChanged: (value) => Navigator.pop(context, value),
-                ),
-                _SortTile(
-                  label: 'Price: Low to High',
-                  value: 'price_low',
-                  groupValue: _sortOption,
-                  onChanged: (value) => Navigator.pop(context, value),
-                ),
-                _SortTile(
-                  label: 'Price: High to Low',
-                  value: 'price_high',
-                  groupValue: _sortOption,
-                  onChanged: (value) => Navigator.pop(context, value),
-                ),
-                _SortTile(
-                  label: 'Name: A to Z',
-                  value: 'name',
-                  groupValue: _sortOption,
-                  onChanged: (value) => Navigator.pop(context, value),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (selected != null) {
-      setState(() => _sortOption = selected);
-      _applyFilters();
-    }
   }
 
   void _openProductDetail(Product product) {
@@ -373,7 +316,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Shop by Category', style: AppleTextStyles.title3),
+                          Padding(
+                            padding: const EdgeInsets.only(right: _horizontalPadding),
+                            child: Text('Shop by Category', style: AppleTextStyles.title3),
+                          ),
                           const SizedBox(height: 14),
                           CategoryFilterBar(
                             categories: _categories,
@@ -388,47 +334,50 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
                         _horizontalPadding,
-                        8,
+                        6,
                         _horizontalPadding,
-                        16,
+                        14,
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 260),
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(0, 0.15),
-                                      end: Offset.zero,
-                                    ).animate(animation),
-                                    child: child,
-                                  ),
-                                );
-                              },
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 260),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.15),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              key: ValueKey<String>(_resultsLabel),
                               child: Text(
                                 _resultsLabel,
-                                key: ValueKey<String>(_resultsLabel),
                                 style: AppleTextStyles.subheadline.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: AppleColors.label,
+                                  letterSpacing: -0.2,
                                 ),
                               ),
                             ),
                           ),
-                          TextButton.icon(
-                            onPressed: _showSortOptions,
-                            icon: const Icon(Icons.swap_vert_rounded, size: 18),
-                            label: const Text('Sort'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppleColors.blue,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                            ),
+                          const SizedBox(height: 10),
+                          LiquidGlassSortMenu(
+                            selectedValue: _sortOption,
+                            options: _sortOptions,
+                            onSelected: (value) {
+                              setState(() => _sortOption = value);
+                              _applyFilters();
+                            },
                           ),
                         ],
                       ),
@@ -502,32 +451,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 ],
               ),
       ),
-    );
-  }
-}
-
-class _SortTile extends StatelessWidget {
-  final String label;
-  final String value;
-  final String groupValue;
-  final ValueChanged<String> onChanged;
-
-  const _SortTile({
-    required this.label,
-    required this.value,
-    required this.groupValue,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(label, style: AppleTextStyles.body),
-      trailing: groupValue == value
-          ? const Icon(Icons.check_rounded, color: AppleColors.blue)
-          : null,
-      onTap: () => onChanged(value),
     );
   }
 }

@@ -138,7 +138,6 @@ class _CartScreenState extends State<CartScreen> {
                     label: isEmpty
                         ? 'Check Out'
                         : 'Check Out — ${formatPrice(_total)}',
-                    accent: false,
                     onPressed: isEmpty
                         ? null
                         : () {

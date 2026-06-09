@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/apple_theme.dart';
@@ -21,7 +22,7 @@ class SwipeableCartRow extends StatefulWidget {
 
 class SwipeableCartRowState extends State<SwipeableCartRow>
     with SingleTickerProviderStateMixin {
-  static const _actionWidth = 76.0;
+  static const _actionWidth = 72.0;
   static const _totalActionsWidth = _actionWidth * 2;
 
   late final AnimationController _snapController;
@@ -31,13 +32,10 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
   @override
   void initState() {
     super.initState();
-    _snapController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-      reverseDuration: const Duration(milliseconds: 240),
-    )..addListener(() {
+    _snapController = AnimationController.unbounded(vsync: this)
+      ..addListener(() {
         setState(() {
-          _dragOffset = _snapController.value * _totalActionsWidth;
+          _dragOffset = _snapController.value.clamp(0, _totalActionsWidth);
         });
       });
   }
@@ -49,19 +47,22 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
   }
 
   void close() {
-    _animateTo(0);
+    _animateTo(0, opening: false);
   }
 
-  void _animateTo(double target) {
+  Future<void> _animateTo(double target, {required bool opening}) async {
     _snapController.stop();
-    final begin = _dragOffset;
-    _snapController.value = begin / _totalActionsWidth;
-    final end = target / _totalActionsWidth;
-    _snapController.animateTo(
-      end.clamp(0.0, 1.0),
-      curve: Curves.easeOutCubic,
-      duration: const Duration(milliseconds: 280),
+    final simulation = SpringSimulation(
+      const SpringDescription(
+        mass: 0.6,
+        stiffness: 520,
+        damping: 34,
+      ),
+      _dragOffset,
+      target,
+      0,
     );
+    await _snapController.animateWith(simulation);
   }
 
   void _onDragStart(DragStartDetails details) {
@@ -71,25 +72,36 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
 
   void _onDragUpdate(DragUpdateDetails details) {
     setState(() {
-      _dragOffset = (_startOffset - details.delta.dx).clamp(0, _totalActionsWidth);
+      _dragOffset =
+          (_startOffset - details.delta.dx).clamp(0, _totalActionsWidth);
     });
   }
 
   void _onDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    if (velocity < -400) {
-      _animateTo(_totalActionsWidth);
+    if (velocity < -500) {
+      _animateTo(_totalActionsWidth, opening: true);
       return;
     }
-    if (velocity > 400) {
-      _animateTo(0);
+    if (velocity > 500) {
+      _animateTo(0, opening: false);
       return;
     }
-    if (_dragOffset > _totalActionsWidth * 0.42) {
-      _animateTo(_totalActionsWidth);
+    if (_dragOffset > _totalActionsWidth * 0.38) {
+      _animateTo(_totalActionsWidth, opening: true);
     } else {
-      _animateTo(0);
+      _animateTo(0, opening: false);
     }
+  }
+
+  BorderRadius get _foregroundRadius {
+    final isOpen = _dragOffset > 1;
+    return BorderRadius.only(
+      topLeft: const Radius.circular(AppleRadius.card),
+      bottomLeft: const Radius.circular(AppleRadius.card),
+      topRight: Radius.circular(isOpen ? 0 : AppleRadius.card),
+      bottomRight: Radius.circular(isOpen ? 0 : AppleRadius.card),
+    );
   }
 
   @override
@@ -99,6 +111,7 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppleRadius.card),
       child: Stack(
+        clipBehavior: Clip.hardEdge,
         children: [
           Positioned.fill(
             child: Row(
@@ -112,7 +125,7 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
                   progress: revealProgress,
                   onTap: () {
                     HapticFeedback.selectionClick();
-                    _animateTo(0);
+                    _animateTo(0, opening: false);
                     widget.onDetail();
                   },
                 ),
@@ -124,7 +137,7 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
                   progress: revealProgress,
                   onTap: () {
                     HapticFeedback.mediumImpact();
-                    _animateTo(0);
+                    _animateTo(0, opening: false);
                     widget.onDelete();
                   },
                 ),
@@ -137,7 +150,10 @@ class SwipeableCartRowState extends State<SwipeableCartRow>
             onHorizontalDragEnd: _onDragEnd,
             child: Transform.translate(
               offset: Offset(-_dragOffset, 0),
-              child: widget.child,
+              child: ClipRRect(
+                borderRadius: _foregroundRadius,
+                child: widget.child,
+              ),
             ),
           ),
         ],
@@ -172,11 +188,11 @@ class _SwipeActionButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Opacity(
-            opacity: 0.35 + (progress * 0.65),
+            opacity: 0.4 + (progress * 0.6),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: Colors.white, size: 22),
+                Icon(icon, color: Colors.white, size: 21),
                 const SizedBox(height: 4),
                 Text(
                   label,

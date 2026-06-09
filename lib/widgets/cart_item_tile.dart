@@ -11,6 +11,7 @@ class CartItemTile extends StatelessWidget {
   final VoidCallback onDecrement;
   final VoidCallback onRemove;
   final bool showCloseButton;
+  final bool flatTrailingEdge;
 
   const CartItemTile({
     super.key,
@@ -19,16 +20,26 @@ class CartItemTile extends StatelessWidget {
     required this.onDecrement,
     required this.onRemove,
     this.showCloseButton = true,
+    this.flatTrailingEdge = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final product = entry.product;
 
+    final decoration = flatTrailingEdge
+        ? AppleDecorations.card.copyWith(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(AppleRadius.card),
+              bottomLeft: Radius.circular(AppleRadius.card),
+            ),
+          )
+        : AppleDecorations.card;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeOutCubic,
-      decoration: AppleDecorations.card,
+      decoration: decoration,
       child: Stack(
         clipBehavior: Clip.none,
         children: [

@@ -121,6 +121,7 @@ class _AnimatedCartItemState extends State<AnimatedCartItem>
               child: CartItemTile(
                 entry: widget.entry,
                 showCloseButton: false,
+                flatTrailingEdge: true,
                 onIncrement: widget.onIncrement,
                 onDecrement: widget.onDecrement,
                 onRemove: _handleRemove,
