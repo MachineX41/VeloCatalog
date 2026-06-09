@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/product.dart';
+import 'product_image.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -35,15 +36,7 @@ class ProductCard extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    product.image,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: Colors.grey,
-                      size: 40,
-                    ),
-                  ),
+                  child: ProductImage(imageUrl: product.image),
                 ),
               ),
             ),

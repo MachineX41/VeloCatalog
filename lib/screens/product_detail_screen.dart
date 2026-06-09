@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/product.dart';
+import '../widgets/product_image.dart';
 import '../widgets/spec_card.dart';
 
 class ProductDetailScreen extends StatelessWidget {
@@ -55,15 +56,7 @@ class ProductDetailScreen extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.network(
-                          product.image,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.image_not_supported_outlined,
-                            size: 64,
-                            color: Colors.grey,
-                          ),
-                        ),
+                        child: ProductImage(imageUrl: product.image),
                       ),
                     ),
                     const SizedBox(height: 24),
