@@ -44,6 +44,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   int _animationTick = 0;
   Timer? _searchDebounce;
   final TextEditingController _searchController = TextEditingController();
+  final LayerLink _filterLayerLink = LayerLink();
+  final GlobalKey<LiquidGlassSortMenuState> _sortMenuKey = GlobalKey();
+  bool _isSortMenuOpen = false;
 
   static const _horizontalPadding = 16.0;
   static const _gridSpacing = 14.0;
@@ -176,11 +179,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   strokeWidth: 2,
                 ),
               )
-            : CustomScrollView(
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-                slivers: [
+            : Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CustomScrollView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -338,46 +344,44 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         _horizontalPadding,
                         14,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 260),
-                            switchInCurve: Curves.easeOutCubic,
-                            switchOutCurve: Curves.easeInCubic,
-                            transitionBuilder: (child, animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0, 0.15),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              key: ValueKey<String>(_resultsLabel),
-                              child: Text(
-                                _resultsLabel,
-                                style: AppleTextStyles.subheadline.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppleColors.label,
-                                  letterSpacing: -0.2,
+                          Expanded(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 260),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, 0.15),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                key: ValueKey<String>(_resultsLabel),
+                                child: Text(
+                                  _resultsLabel,
+                                  style: AppleTextStyles.subheadline.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppleColors.label,
+                                    letterSpacing: -0.2,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          LiquidGlassSortMenu(
-                            selectedValue: _sortOption,
-                            options: _sortOptions,
-                            onSelected: (value) {
-                              setState(() => _sortOption = value);
-                              _applyFilters();
-                            },
+                          const SizedBox(width: 12),
+                          CompositedTransformTarget(
+                            link: _filterLayerLink,
+                            child: const SizedBox(width: 44, height: 44),
                           ),
                         ],
                       ),
@@ -447,6 +451,41 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                               childCount: _filteredProducts.length,
                             ),
                           ),
+                  ),
+                    ],
+                  ),
+                  if (_isSortMenuOpen)
+                    Positioned.fill(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _sortMenuKey.currentState?.close(),
+                        child: const ColoredBox(color: Colors.transparent),
+                      ),
+                    ),
+                  CompositedTransformFollower(
+                    link: _filterLayerLink,
+                    showWhenUnlinked: false,
+                    targetAnchor: Alignment.topRight,
+                    followerAnchor: Alignment.topRight,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      elevation: 24,
+                      shadowColor: Colors.black.withValues(alpha: 0.14),
+                      child: LiquidGlassSortMenu(
+                        key: _sortMenuKey,
+                        selectedValue: _sortOption,
+                        options: _sortOptions,
+                        onOpenChanged: (isOpen) {
+                          if (_isSortMenuOpen != isOpen) {
+                            setState(() => _isSortMenuOpen = isOpen);
+                          }
+                        },
+                        onSelected: (value) {
+                          setState(() => _sortOption = value);
+                          _applyFilters();
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),

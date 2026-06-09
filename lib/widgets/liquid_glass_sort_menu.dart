@@ -14,25 +14,32 @@ class SortMenuOption {
 }
 
 class LiquidGlassSortMenu extends StatefulWidget {
+  static const optionHeight = 44.0;
+
   final String selectedValue;
   final ValueChanged<String> onSelected;
   final List<SortMenuOption> options;
+  final ValueChanged<bool>? onOpenChanged;
 
   const LiquidGlassSortMenu({
     super.key,
     required this.selectedValue,
     required this.onSelected,
     required this.options,
+    this.onOpenChanged,
   });
 
   @override
-  State<LiquidGlassSortMenu> createState() => _LiquidGlassSortMenuState();
+  State<LiquidGlassSortMenu> createState() => LiquidGlassSortMenuState();
 }
 
-class _LiquidGlassSortMenuState extends State<LiquidGlassSortMenu>
+class LiquidGlassSortMenuState extends State<LiquidGlassSortMenu>
     with SingleTickerProviderStateMixin {
+  static const _buttonSize = 44.0;
+  static const _expandedWidth = 276.0;
+  static const _headerHeight = 44.0;
+
   late final AnimationController _controller;
-  late final Animation<double> _expand;
   bool _isOpen = false;
 
   @override
@@ -40,7 +47,6 @@ class _LiquidGlassSortMenuState extends State<LiquidGlassSortMenu>
     super.initState();
     _controller = AnimationController.unbounded(vsync: this)
       ..addListener(() => setState(() {}));
-    _expand = _controller;
   }
 
   @override
@@ -49,129 +55,187 @@ class _LiquidGlassSortMenuState extends State<LiquidGlassSortMenu>
     super.dispose();
   }
 
-  String get _selectedLabel {
-    return widget.options
-        .firstWhere((option) => option.value == widget.selectedValue)
-        .label;
+  double get _expandedHeight {
+    final dividerCount =
+        widget.options.length > 1 ? widget.options.length - 1 : 0;
+    return _headerHeight +
+        widget.options.length * LiquidGlassSortMenu.optionHeight +
+        dividerCount +
+        12;
+  }
+
+  double get _rawProgress => _controller.value;
+  double get _progress => _rawProgress.clamp(0.0, 1.0);
+
+  double _curve(double t) => Curves.easeOutCubic.transform(t.clamp(0.0, 1.0));
+
+  Future<void> _animateTo(double target) async {
+    _controller.stop();
+    final simulation = SpringSimulation(
+      SpringDescription(
+        mass: 0.9,
+        stiffness: target > _progress ? 260 : 300,
+        damping: target > _progress ? 20 : 24,
+      ),
+      _rawProgress,
+      target,
+      _controller.velocity,
+    );
+    await _controller.animateWith(simulation);
+    if (mounted) {
+      if (!_isOpen && _progress < 0.02) {
+        _controller.value = 0;
+      } else if (_isOpen && _progress > 0.98) {
+        _controller.value = 1;
+      }
+    }
   }
 
   Future<void> _toggle() async {
     HapticFeedback.selectionClick();
-    final target = _isOpen ? 0.0 : 1.0;
     _isOpen = !_isOpen;
-
-    _controller.stop();
-    final simulation = SpringSimulation(
-      const SpringDescription(mass: 0.75, stiffness: 380, damping: 28),
-      _expand.value.clamp(0, 1),
-      target,
-      0,
-    );
-    await _controller.animateWith(simulation);
+    widget.onOpenChanged?.call(_isOpen);
+    await _animateTo(_isOpen ? 1 : 0);
   }
 
-  Future<void> _close() async {
+  Future<void> close() async {
     if (!_isOpen) return;
     _isOpen = false;
-    _controller.stop();
-    final simulation = SpringSimulation(
-      const SpringDescription(mass: 0.75, stiffness: 420, damping: 30),
-      _expand.value.clamp(0, 1),
-      0,
-      0,
-    );
-    await _controller.animateWith(simulation);
+    widget.onOpenChanged?.call(false);
+    await _animateTo(0);
+    if (mounted) _controller.value = 0;
   }
 
   void _select(String value) {
     HapticFeedback.selectionClick();
     widget.onSelected(value);
-    _close();
+    close();
   }
 
   @override
   Widget build(BuildContext context) {
-    final progress = _expand.value.clamp(0.0, 1.0);
+    final t = _progress;
+    final morph = _curve(t);
+    final width = lerpDouble(_buttonSize, _expandedWidth, morph)!;
+    final height = lerpDouble(_buttonSize, _expandedHeight, morph)!;
+    final radius = lerpDouble(_buttonSize / 2, 22, morph)!;
+    final blur = lerpDouble(12, 24, morph)!;
+    final contentOpacity =
+        Curves.easeIn.transform(((t - 0.12) / 0.88).clamp(0.0, 1.0));
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _GlassSlice(
-          borderRadius: BorderRadius.circular(18),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: _toggle,
-              borderRadius: BorderRadius.circular(18),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.tune_rounded,
-                      size: 17,
-                      color: _isOpen ? AppleColors.blue : AppleColors.label,
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topRight,
+        children: [
+          Positioned(
+            top: 0,
+            right: 0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(radius),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [
+                        AppleColors.card.withValues(alpha: 0.9),
+                        AppleColors.card.withValues(alpha: 0.65),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _selectedLabel,
-                        style: AppleTextStyles.footnote.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppleColors.label,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.65),
+                      width: 0.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            Colors.black.withValues(alpha: 0.05 + morph * 0.07),
+                        blurRadius: 14 + morph * 14,
+                        offset: Offset(0, 4 + morph * 8),
                       ),
-                    ),
-                    AnimatedRotation(
-                      turns: _isOpen ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 280),
-                      curve: Curves.easeOutBack,
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        size: 20,
-                        color: _isOpen ? AppleColors.blue : AppleColors.secondaryLabel,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        ClipRect(
-          child: Align(
-            alignment: Alignment.topCenter,
-            heightFactor: progress,
-            child: Opacity(
-              opacity: progress,
-              child: Padding(
-                padding: EdgeInsets.only(top: 6 * progress),
-                child: Transform.scale(
-                  alignment: Alignment.topCenter,
-                  scale: 0.92 + (progress * 0.08),
-                  child: _GlassSlice(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    ],
+                  ),
+                  child: SizedBox(
+                    width: width,
+                    height: height,
+                    child: Stack(
+                      clipBehavior: Clip.hardEdge,
                       children: [
-                        for (var i = 0; i < widget.options.length; i++) ...[
-                          if (i > 0)
-                            Divider(
-                              height: 1,
-                              thickness: 0.6,
-                              color: Colors.white.withValues(alpha: 0.45),
-                              indent: 14,
-                              endIndent: 14,
+                        if (contentOpacity > 0)
+                          Opacity(
+                            opacity: contentOpacity,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                SizedBox(
+                                  height: _headerHeight,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 18,
+                                      right: 48,
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Sort',
+                                        style: AppleTextStyles.footnote.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppleColors.label,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                for (var i = 0; i < widget.options.length; i++) ...[
+                                  if (i > 0)
+                                    Divider(
+                                      height: 1,
+                                      thickness: 0.6,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.45),
+                                      indent: 16,
+                                      endIndent: 16,
+                                    ),
+                                  _SortOptionTile(
+                                    label: widget.options[i].label,
+                                    isSelected: widget.options[i].value ==
+                                        widget.selectedValue,
+                                    onTap: () =>
+                                        _select(widget.options[i].value),
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                              ],
                             ),
-                          _SortOptionTile(
-                            label: widget.options[i].label,
-                            isSelected:
-                                widget.options[i].value == widget.selectedValue,
-                            onTap: () => _select(widget.options[i].value),
                           ),
-                        ],
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          width: _buttonSize,
+                          height: _buttonSize,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _toggle,
+                              customBorder: const CircleBorder(),
+                              child: Icon(
+                                _isOpen
+                                    ? Icons.close_rounded
+                                    : Icons.tune_rounded,
+                                size: 20,
+                                color: _isOpen
+                                    ? AppleColors.blue
+                                    : AppleColors.label,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -179,52 +243,7 @@ class _LiquidGlassSortMenuState extends State<LiquidGlassSortMenu>
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _GlassSlice extends StatelessWidget {
-  final Widget child;
-  final BorderRadius borderRadius;
-
-  const _GlassSlice({
-    required this.child,
-    required this.borderRadius,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppleColors.card.withValues(alpha: 0.78),
-                AppleColors.card.withValues(alpha: 0.58),
-              ],
-            ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.62),
-              width: 0.8,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: child,
-        ),
+        ],
       ),
     );
   }
@@ -247,26 +266,30 @@ class _SortOptionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppleTextStyles.footnote.copyWith(
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected ? AppleColors.blue : AppleColors.label,
+        child: SizedBox(
+          height: LiquidGlassSortMenu.optionHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: AppleTextStyles.footnote.copyWith(
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? AppleColors.blue : AppleColors.label,
+                    ),
                   ),
                 ),
-              ),
-              if (isSelected)
-                const Icon(
-                  Icons.check_rounded,
-                  size: 18,
-                  color: AppleColors.blue,
-                ),
-            ],
+                if (isSelected)
+                  const Icon(
+                    Icons.check_rounded,
+                    size: 18,
+                    color: AppleColors.blue,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
