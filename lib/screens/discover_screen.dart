@@ -9,6 +9,7 @@ import '../theme/apple_theme.dart';
 import '../widgets/animated_product_grid_item.dart';
 import '../widgets/category_filter_bar.dart';
 import '../widgets/liquid_glass_sort_menu.dart';
+import '../widgets/liquid_glass_surface.dart';
 import '../widgets/product_card.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
@@ -211,27 +212,20 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                               ],
                             ),
                           ),
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: _openCart,
-                              customBorder: const CircleBorder(),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Badge(
-                                  isLabelVisible: widget.cartCount > 0,
-                                  backgroundColor: AppleColors.blue,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  label: Text('${widget.cartCount}'),
-                                  child: const Icon(
-                                    Icons.shopping_bag_outlined,
-                                    size: 24,
-                                    color: AppleColors.label,
-                                  ),
-                                ),
+                          LiquidGlassCircleButton(
+                            onTap: _openCart,
+                            child: Badge(
+                              isLabelVisible: widget.cartCount > 0,
+                              backgroundColor: AppleColors.blue,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              label: Text('${widget.cartCount}'),
+                              child: const Icon(
+                                Icons.shopping_bag_outlined,
+                                size: 22,
+                                color: AppleColors.label,
                               ),
                             ),
                           ),
@@ -247,50 +241,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         _horizontalPadding,
                         20,
                       ),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: AppleColors.searchFill,
-                          borderRadius: BorderRadius.circular(AppleRadius.search),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          style: AppleTextStyles.body.copyWith(
-                            fontSize: 16,
-                            color: AppleColors.label,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Search products',
-                            hintStyle: AppleTextStyles.subheadline,
-                            prefixIcon: const Icon(
-                              Icons.search_rounded,
-                              color: AppleColors.secondaryLabel,
-                              size: 22,
-                            ),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {});
-                                      _applyFilters();
-                                    },
-                                    icon: const Icon(
-                                      Icons.close_rounded,
-                                      size: 20,
-                                      color: AppleColors.secondaryLabel,
-                                    ),
-                                  )
-                                : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 15,
-                              horizontal: 4,
-                            ),
-                          ),
-                          onChanged: (_) {
-                            setState(() {});
-                            _scheduleFilter();
-                          },
-                        ),
+                      child: LiquidGlassSearchBar(
+                        controller: _searchController,
+                        onChanged: (_) {
+                          setState(() {});
+                          _scheduleFilter();
+                        },
+                        onClear: () {
+                          _searchController.clear();
+                          setState(() {});
+                          _applyFilters();
+                        },
                       ),
                     ),
                   ),
