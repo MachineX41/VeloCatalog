@@ -47,6 +47,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   final TextEditingController _searchController = TextEditingController();
   final LayerLink _filterLayerLink = LayerLink();
   final GlobalKey<LiquidGlassSortMenuState> _sortMenuKey = GlobalKey();
+  final GlobalKey _glassBackgroundKey = GlobalKey();
   bool _isSortMenuOpen = false;
 
   static const _horizontalPadding = 16.0;
@@ -183,11 +184,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             : Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CustomScrollView(
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    slivers: [
+                  RepaintBoundary(
+                    key: _glassBackgroundKey,
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
+                      ),
+                      slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
@@ -349,7 +352,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     ),
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: EdgeInsets.fromLTRB(
                       _horizontalPadding,
                       0,
                       _horizontalPadding,
@@ -412,7 +415,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             ),
                           ),
                   ),
-                    ],
+                      ],
+                    ),
                   ),
                   if (_isSortMenuOpen)
                     Positioned.fill(
@@ -433,6 +437,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       shadowColor: Colors.black.withValues(alpha: 0.14),
                       child: LiquidGlassSortMenu(
                         key: _sortMenuKey,
+                        backgroundKey: _glassBackgroundKey,
                         selectedValue: _sortOption,
                         options: _sortOptions,
                         onOpenChanged: (isOpen) {

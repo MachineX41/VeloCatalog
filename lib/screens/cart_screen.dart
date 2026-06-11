@@ -15,6 +15,8 @@ class CartScreen extends StatefulWidget {
   final void Function(Product product) onIncrement;
   final void Function(Product product) onDecrement;
   final void Function(Product product) onRemove;
+  final bool showBackButton;
+  final double bottomInset;
 
   const CartScreen({
     super.key,
@@ -23,6 +25,8 @@ class CartScreen extends StatefulWidget {
     required this.onIncrement,
     required this.onDecrement,
     required this.onRemove,
+    this.showBackButton = true,
+    this.bottomInset = 0,
   });
 
   @override
@@ -46,13 +50,24 @@ class _CartScreenState extends State<CartScreen> {
       backgroundColor: AppleColors.canvas,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 8, bottom: 4),
-              child: AppleBackButton(label: 'Bag'),
-            ),
-            Expanded(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: widget.bottomInset),
+          child: Column(
+            children: [
+              if (widget.showBackButton)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8, bottom: 4),
+                  child: AppleBackButton(label: 'Bag'),
+                )
+              else
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(22, 12, 22, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Bag', style: AppleTextStyles.largeTitle),
+                  ),
+                ),
+              Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 320),
                 switchInCurve: Curves.easeOutCubic,
@@ -153,7 +168,8 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

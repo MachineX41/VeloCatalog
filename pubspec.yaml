@@ -62,6 +62,9 @@ flutter:
     - assets/images/banner.png
     - assets/images/products/
 
+  shaders:
+    - shaders/liquid_glass_lens.frag
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
