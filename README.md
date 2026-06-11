@@ -1,16 +1,118 @@
-# velo_catalog
+# VeloCatalog
 
-A new Flutter project.
+Apple Store tarzında tasarlanmış mini katalog uygulaması. Ürünleri keşfedin, detaylarını inceleyin ve sepetinizi yönetin.
 
-## Getting Started
+## Kısa Açıklama
 
-This project is a starting point for a Flutter application.
+VeloCatalog, Flutter ile geliştirilmiş bir ürün katalog uygulamasıdır. Kullanıcılar ürünleri arayabilir, kategorilere göre filtreleyebilir, sıralayabilir, ürün detay sayfasından sepete ekleyebilir ve sepet ekranında miktar güncelleyebilir veya kaydırarak detay/silme işlemlerini gerçekleştirebilir.
 
-A few resources to get you started if this is your first Flutter project:
+**Öne çıkan özellikler:**
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Discover ekranı: arama, kategori filtreleri, sıralama paneli, ürün grid'i
+- Ürün detay sayfası: görsel, açıklama ve sepete ekleme
+- Sepet ekranı: miktar adımı, swipe ile detay/sil, ödeme özeti
+- Liquid glass arayüz: shader tabanlı cam efekti (filtre paneli), buzlu yüzeyler
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Flutter Sürümü
+
+Bu proje aşağıdaki sürümle geliştirilmiş ve test edilmiştir:
+
+| Araç | Sürüm |
+|------|-------|
+| **Flutter** | 3.38.9 (stable) |
+| **Dart** | 3.10.8 |
+
+`pubspec.yaml` içinde SDK gereksinimi: `^3.10.8`
+
+## Gereksinimler
+
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.38.x veya uyumlu Dart 3.10+)
+- iOS Simulator / Android Emulator veya fiziksel cihaz
+- iOS için: Xcode 15+ (fiziksel cihaz veya simulator build için)
+
+## Çalıştırma Adımları
+
+1. Depoyu klonlayın veya proje klasörüne gidin:
+
+```bash
+cd VeloCatalog
+```
+
+2. Bağımlılıkları yükleyin:
+
+```bash
+flutter pub get
+```
+
+3. Bağlı cihazları kontrol edin:
+
+```bash
+flutter devices
+```
+
+4. Uygulamayı çalıştırın:
+
+```bash
+flutter run
+```
+
+**iOS (release, shader desteği için önerilir):**
+
+```bash
+flutter run --release
+```
+
+**Android:**
+
+```bash
+flutter run
+```
+
+5. (İsteğe bağlı) Statik analiz:
+
+```bash
+flutter analyze
+```
+
+## Ekran Görüntüleri
+
+### Discover (Ana Sayfa)
+
+Ürün listesi, arama çubuğu, kategori filtreleri ve sıralama paneli.
+
+![Discover ekranı](screenshots/discover.png)
+
+### Ürün Detay
+
+Ürün görseli, fiyat, açıklama ve sepete ekleme butonu.
+
+![Ürün detay ekranı](screenshots/product_detail.png)
+
+### Sepet
+
+Sepet öğeleri, miktar kontrolü ve kaydırarak detay/silme aksiyonları.
+
+![Sepet ekranı](screenshots/cart.png)
+
+## Proje Yapısı
+
+```
+lib/
+├── main.dart                 # Uygulama girişi ve sepet state yönetimi
+├── data/                     # Ürün modeli ve mock veri
+├── screens/                  # Discover, detay ve sepet ekranları
+├── widgets/                  # Kartlar, liquid glass bileşenleri
+├── liquid_glass/             # Shader capture modülü
+└── theme/                    # Apple tarzı tema ve tipografi
+
+assets/
+├── data/products.json
+└── images/
+
+shaders/
+└── liquid_glass_lens.frag    # Cam efekti fragment shader
+```
+
+## Lisans
+
+Bu proje eğitim / portföy amaçlıdır.
