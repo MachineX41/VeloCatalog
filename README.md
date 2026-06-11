@@ -2,6 +2,18 @@
 
 Apple Store tarzında tasarlanmış mini katalog uygulaması. Ürünleri keşfedin, detaylarını inceleyin ve sepetinizi yönetin.
 
+<p align="center">
+  <img src="screenshots/discover.png" width="200" alt="Discover" />
+  &nbsp;
+  <img src="screenshots/product_detail.png" width="200" alt="Ürün Detay" />
+  &nbsp;
+  <img src="screenshots/cart.png" width="200" alt="Sepet" />
+</p>
+
+<p align="center">
+  <sub><b>Discover</b> &nbsp;·&nbsp; <b>Ürün Detay</b> &nbsp;·&nbsp; <b>Sepet</b></sub>
+</p>
+
 ## Kısa Açıklama
 
 VeloCatalog, Flutter ile geliştirilmiş bir ürün katalog uygulamasıdır. Kullanıcılar ürünleri arayabilir, kategorilere göre filtreleyebilir, sıralayabilir, ürün detay sayfasından sepete ekleyebilir ve sepet ekranında miktar güncelleyebilir veya kaydırarak detay/silme işlemlerini gerçekleştirebilir.
@@ -73,26 +85,6 @@ flutter run
 ```bash
 flutter analyze
 ```
-
-## Ekran Görüntüleri
-
-### Discover (Ana Sayfa)
-
-Ürün listesi, arama çubuğu, kategori filtreleri ve sıralama paneli.
-
-![Discover ekranı](screenshots/discover.png)
-
-### Ürün Detay
-
-Ürün görseli, fiyat, açıklama ve sepete ekleme butonu.
-
-![Ürün detay ekranı](screenshots/product_detail.png)
-
-### Sepet
-
-Sepet öğeleri, miktar kontrolü ve kaydırarak detay/silme aksiyonları.
-
-![Sepet ekranı](screenshots/cart.png)
 
 ## Proje Yapısı
 
